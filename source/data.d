@@ -6,21 +6,21 @@ string FILE_DIR;
 
 void checkWorkspace()
 {
-    import std.file: exists, isFile, isDir, read;
+    import std.file: exists, isFile, isDir, readText;
     import std.json;
 
-    if (!exists("./.mctd" || !isDir("./.mctd")))
+    if (!exists("./.mcdt") || !isDir("./.mcdt"))
     {
         initWorkspace();
     }
 
-    if (!exists("./.mctd/mod.json" || !isFile("./.mcdt/mod.json")))
+    if (!exists("./.mcdt/mod.json") || !isFile("./.mcdt/mod.json"))
     {
         initWorkspace();
     }
 
-    auto jsonData = parseJSON(readText("./.mctd/mod.json"));
-    WORK_SPCAE_MODID = jsonData["modid"];
+    auto jsonData = parseJSON(readText("./.mcdt/mod.json")).object();
+    WORK_SPCAE_MODID = jsonData["modid"].str();
 
     FILE_DIR = WORK_SPCAE_MODID == "" ? BASE_DIR : "./src/main/resources/assets" ~ WORK_SPCAE_MODID;
 }
@@ -29,6 +29,6 @@ void initWorkspace()
 {
     import std.file;
 
-    mkdir("./.mctd");
-    write("./.mctd/mod.json", "{\n    \"modid\": \"\"\n}");
+    mkdir("./.mcdt");
+    write("./.mcdt/mod.json", "{\n    \"modid\": \"\"\n}");
 }

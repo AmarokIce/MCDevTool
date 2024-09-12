@@ -13,9 +13,9 @@ void main(string[] args)
 
 	// main start.
 	init();
-	data.initWorkspace();
+	data.checkWorkspace();
 
-	string command = args.length < 1 ? "" : args[1];
+	string command = args.length < 1 ? "" : args[0];
 	switch (command)
 	{
 	case "help":
@@ -31,11 +31,11 @@ void main(string[] args)
 
 		import langhandler;
 
-		auto langArgs = new LangArgs(
+		LangArgs langArgs = *(new LangArgs(
 			args[1],
 			args.length > 2 ? args[2] : "json",
 			args.length > 3 ? args[3] : "en_us"
-		);
+		));
 
 		langhandle(langArgs);
 		break;

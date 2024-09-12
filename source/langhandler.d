@@ -35,18 +35,14 @@ void langhandle(LangArgs args)
     }
 }
 
-void create(LangArgs args)
-{
+void create(LangArgs args) => args.langType == "lang" ? langCreate(args.targetLang) : jsonCreate(args.targetLang);
 
-    // TODO
-
-}
 
 void jsonCreate(string target)
 {
-    string createUnlocalizations()
+    string[] createUnlocalizations()
     {
-        import std.string : split;
+        import std.string : split, replace;
         import esstool.arrayutil : contains;
         import esstool : LineReader;
 
@@ -58,30 +54,34 @@ void jsonCreate(string target)
         while (reader.readly())
         {
             string txt = reader.read();
-            txt = contains(txt, ":") ? removeSpaceOutline(txt.split(":")) : "";
-            unlocalization ~= txt;
+            if (txt == "{" || txt == "}")
+            {
+                continue;
+            }
+            txt = contains(txt, ':') ? removeSpaceOutline(txt.split(":")[0].replace("\"", "")) : "";
+            unlocalizations ~= txt;
         }
 
         return unlocalizations;
     }
 
     import std.string : split, replace;
-    import std.file : dirEntries, readText;
+    import std.file : dirEntries, readText, SpanMode;
     import std.json;
 
-    import esstool.arrayutil : len;
+    import esstool.arrayutil : len, contains;
     import esstool : CSVBuilder;
 
     string[] langs = new string[0];
 
-    foreach (entry; dirEntries(langPath))
+    foreach (entry; dirEntries(langPath, SpanMode.shallow))
     {
         if (!entry.isFile)
         {
             continue;
         }
 
-        langs ~= entry.name.split("/")[$ - 1].replace(".json");
+        langs ~= entry.name.split("\\")[$ - 1].replace(".json", "").replace("\"", "");
     }
 
     string[] unlocalizations = createUnlocalizations();
@@ -92,7 +92,7 @@ void jsonCreate(string target)
 
     foreach (lang; langs)
     {
-        auto raw = parseJSON(readText(langPath ~ "/" ~ lang ~ ".json")).object();
+        JSONValue[string] raw = parseJSON(readText(langPath ~ "/" ~ lang ~ ".json")).object();
         langRawMap[lang] = raw;
     }
 
@@ -105,19 +105,28 @@ void jsonCreate(string target)
             continue;
         }
 
+        log("Data of : " ~ key);
+        builder.add("unlocalization", key);
+
         foreach (lang; langRawMap.keys())
         {
-            auto map = langRawMap[lang];
-            if (len(map) <= i)
+            JSONValue[string] map = langRawMap[lang];
+
+            if (len(map.keys()) <= i)
             {
                 continue;
             }
 
-            builder.add(lang, map[key].str());
+            builder.add(lang, contains(map.keys(), key) ? map[key].str() : "");
         }
     }
 
     builder.build(basePath ~ "/LangTable.csv");
+}
+
+void langCreate(string target)
+{
+
 }
 
 void build(LangArgs args)
