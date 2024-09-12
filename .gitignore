@@ -1,0 +1,17 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/mcdevtool
+mcdevtool.so
+mcdevtool.dylib
+mcdevtool.dll
+mcdevtool.a
+mcdevtool.lib
+mcdevtool-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst
+.vscode
