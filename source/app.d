@@ -47,10 +47,6 @@ void main(string[] args)
         LOGGER.warn(getHelp);
         break;
     }
-
-    import std.stdio : readln;
-
-    readln();
 }
 
 void init()

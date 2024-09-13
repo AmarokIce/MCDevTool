@@ -128,6 +128,7 @@ void build(LangArgs args)
 {
     import std.csv;
     import std.file : readText, exists, isFile;
+    import esstool.arrayutil : contains;
 
     auto fileName = basePath ~ "/LangTable.csv";
 
@@ -138,13 +139,66 @@ void build(LangArgs args)
     }
     auto table = readText(fileName);
 
+    string[][string] datas;
     foreach (pair; csvReader!(string[string])(table, null))
     {
-        LOGGER.debugInfo("");
+        foreach (key; pair.keys)
+        {
+            datas[key] ~= pair[key];
+        }
     }
+
+    if (!contains(datas.keys, "unlocalization"))
+    {
+        LOGGER.error("The CSV file didnot had `unlocalization` type!");
+        return;
+    }
+
+    string[] basic = datas["unlocalization"];
+    foreach (key; datas.keys)
+    {
+        if (key == "unlocalization")
+        {
+            continue;
+        }
+
+        jsonBuild(basic, datas[key], key);
+    }
+
 }
 
-void jsonBuild()
+void jsonBuild(string[] basic, string[] creator, string lang)
 {
+    import esstool.arrayutil : len;
+    import esstool : StringBuilder;
 
+    import std.file : write;
+
+    StringBuilder build = new StringBuilder();
+    int count = len(basic);
+
+    build.append("{").appendNewLine;
+    for (int i = 0; i < count; i++)
+    {
+        auto key = basic[i];
+        auto value = creator[i];
+
+        if (key == "" && value == "")
+        {
+            build.appendNewLine;
+            continue;
+        }
+
+        build.append("    \"")
+            .append(key)
+            .append("\"")
+            .append(": \"")
+            .append(value)
+            .append("\",")
+            .appendNewLine;
+    }
+
+    build.removeAt(build.size() - 3).append("}");
+
+    write(langPath ~ "/" ~ lang ~ ".json", build.asString);
 }
