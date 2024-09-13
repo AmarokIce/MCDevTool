@@ -1,6 +1,5 @@
 module langhandler;
 
-import log : log;
 import data;
 import util;
 
@@ -30,13 +29,13 @@ void langhandle(LangArgs args)
         break;
 
     default:
-        log("Unknown command. Please send `./mcdt help` to get help.");
+        LOGGER.warn("Unknown command. Please send `./mcdt help` to get help.");
         break;
     }
 }
 
-void create(LangArgs args) => args.langType == "lang" ? langCreate(args.targetLang) : jsonCreate(args.targetLang);
-
+void create(LangArgs args) => args.langType == "lang" ? langCreate(args.targetLang)
+    : jsonCreate(args.targetLang);
 
 void jsonCreate(string target)
 {
@@ -102,22 +101,18 @@ void jsonCreate(string target)
 
         if (key == "")
         {
+            LOGGER.debugInfo("Pass");
             continue;
         }
 
-        log("Data of : " ~ key);
-        builder.add("unlocalization", key);
+        LOGGER.debugInfo("Data of : " ~ key);
+        builder.addAt("unlocalization", key, i);
 
         foreach (lang; langRawMap.keys())
         {
             JSONValue[string] map = langRawMap[lang];
 
-            if (len(map.keys()) <= i)
-            {
-                continue;
-            }
-
-            builder.add(lang, contains(map.keys(), key) ? map[key].str() : "");
+            builder.addAt(lang, contains(map.keys(), key) ? map[key].str() : "", i);
         }
     }
 
@@ -126,12 +121,27 @@ void jsonCreate(string target)
 
 void langCreate(string target)
 {
-
+    // TODO
 }
 
 void build(LangArgs args)
 {
+    import std.csv;
+    import std.file : readText, exists, isFile;
 
+    auto fileName = basePath ~ "/LangTable.csv";
+
+    if (!exists(fileName) || !isFile(fileName))
+    {
+        LOGGER.warn("Cannot find LangTable.csv file!");
+        return;
+    }
+    auto table = readText(fileName);
+
+    foreach (pair; csvReader!(string[string])(table, null))
+    {
+        LOGGER.debugInfo("");
+    }
 }
 
 void jsonBuild()

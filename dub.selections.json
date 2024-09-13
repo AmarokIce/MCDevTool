@@ -1,10 +1,12 @@
 {
-	"fileVersion": 1,
-	"versions": {
-		"archive": "0.6.0",
-		"dxml": "0.4.4",
-		"esstool": {"path":"../esstool"},
-		"xlsx": "0.0.8",
-		"xlsxwriter": "0.0.1"
-	}
+    "fileVersion": 1,
+    "versions": {
+        "archive": "0.6.0",
+        "dxml": "0.4.4",
+        "esstool": {
+            "path": "../esstool"
+        },
+        "xlsx": "0.0.8",
+        "xlsxwriter": "0.0.1"
+    }
 }

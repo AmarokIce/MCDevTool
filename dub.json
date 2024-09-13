@@ -1,14 +1,17 @@
 {
-	"authors": [
-		"AmarokIce"
-	],
-	"copyright": "Copyleft (ɔ) 2024, AmarokIce",
-	"dependencies": {
-		"esstool": {
-			"path": "../esstool"
-		}
-	},
-	"description": "A tool for Minecraft Dever.",
-	"license": "MPL-2.0",
-	"name": "mcdt"
+    "authors": [
+        "AmarokIce"
+    ],
+    "copyright": "Copyleft (ɔ) 2024, AmarokIce",
+    "dependencies": {
+        "esstool": {
+            "path": "../esstool"
+        },
+        "log4d": {
+            "path": "../log4d"
+        }
+    },
+    "description": "A tool for Minecraft Dever.",
+    "license": "MPL-2.0",
+    "name": "mcdt"
 }
