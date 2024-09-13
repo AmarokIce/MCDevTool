@@ -65,23 +65,11 @@ void jsonCreate(string target)
     }
 
     import std.string : split, replace;
-    import std.file : dirEntries, readText, SpanMode;
+    import std.file : readText;
     import std.json;
 
     import esstool.arrayutil : len, contains;
     import esstool : CSVBuilder;
-
-    string[] langs = new string[0];
-
-    foreach (entry; dirEntries(langPath, SpanMode.shallow))
-    {
-        if (!entry.isFile)
-        {
-            continue;
-        }
-
-        langs ~= entry.name.split("\\")[$ - 1].replace(".json", "").replace("\"", "");
-    }
 
     string[] unlocalizations = createUnlocalizations();
 
@@ -89,6 +77,7 @@ void jsonCreate(string target)
 
     JSONValue[string][string] langRawMap;
 
+    auto langs = findLangs();
     foreach (lang; langs)
     {
         JSONValue[string] raw = parseJSON(readText(langPath ~ "/" ~ lang ~ ".json")).object();
@@ -121,7 +110,91 @@ void jsonCreate(string target)
 
 void langCreate(string target)
 {
-    // TODO
+    import esstool : LineReader, CSVBuilder;
+    import esstool.arrayutil : contains, len;
+    import std.string;
+
+    string[string] readLangLines(string lang)
+    {
+        string[string] map;
+        LineReader reader = new LineReader(langPath ~ "/" ~ lang ~ ".lang");
+
+        while (reader.readly)
+        {
+            auto line = reader.read;
+            if (contains(line, '#'))
+            {
+                line = line.split("#")[0];
+            }
+            if (!contains(line, '='))
+            {
+                continue;
+            }
+
+            string[] kv = line.split("=");
+            map[kv[0]] = kv[1];
+        }
+
+        return map;
+    }
+
+    string[string][string] readLangFile()
+    {
+        string[string][string] langsMap;
+        auto langs = findLangs("lang");
+        foreach (lang; langs)
+        {
+            langsMap[lang] = readLangLines(lang);
+        }
+
+        return langsMap;
+    }
+
+    string[] unlocalizations = new string[0];
+
+    string targetFile = langPath ~ "/" ~ target ~ ".lang";
+    auto reader = new LineReader(targetFile);
+
+    while (reader.readly)
+    {
+        string line = reader.read;
+        line = contains(line, '#') ? line.split("#")[0] : line;
+        if (!contains(line, '='))
+        {
+            unlocalizations ~= "";
+            continue;
+        }
+
+        unlocalizations ~= line.split("=")[0];
+    }
+
+    auto langs = readLangFile;
+    auto builder = new CSVBuilder();
+    auto count = len(unlocalizations);
+
+    for (int i = 0; i < count; i++)
+    {
+        auto key = unlocalizations[i];
+        if (key == "")
+        {
+            continue;
+        }
+
+        builder.addAt("unlocalization", key, i);
+        foreach (lang; langs.keys)
+        {
+            auto dat = langs[lang];
+            if (!contains(dat.keys, key))
+            {
+                continue;
+            }
+
+            auto value = dat[key];
+            builder.addAt(lang, value, i);
+        }
+    }
+
+    builder.build(basePath ~ "/LangTable.csv");
 }
 
 void build(LangArgs args)
@@ -162,7 +235,14 @@ void build(LangArgs args)
             continue;
         }
 
-        jsonBuild(basic, datas[key], key);
+        if (args.langType == "lang")
+        {
+            langBuild(basic, datas[key], key);
+        }
+        else
+        {
+            jsonBuild(basic, datas[key], key);
+        }
     }
 
 }
@@ -201,4 +281,63 @@ void jsonBuild(string[] basic, string[] creator, string lang)
     build.removeAt(build.size() - 3).append("}");
 
     write(langPath ~ "/" ~ lang ~ ".json", build.asString);
+}
+
+void langBuild(string[] basic, string[] creator, string lang)
+{
+    import esstool.arrayutil : len;
+    import esstool : StringBuilder;
+
+    import std.file : write;
+
+    StringBuilder build = new StringBuilder();
+    int count = len(basic);
+
+    for (int i = 0; i < count; i++)
+    {
+        auto key = basic[i];
+        auto value = creator[i];
+
+        if (key == "" && value == "")
+        {
+            build.appendNewLine;
+            continue;
+        }
+
+        build.append(key)
+            .append("=")
+            .append(value)
+            .appendNewLine;
+    }
+
+    write(langPath ~ "/" ~ lang ~ ".lang", build.asString);
+}
+
+string[] findLangs(string type = "json")
+{
+    import std.string : split, replace, endsWith;
+    import std.file : dirEntries, SpanMode;
+
+    string[] langs = new string[0];
+
+    foreach (entry; dirEntries(langPath, SpanMode.shallow))
+    {
+        if (!entry.isFile)
+        {
+            continue;
+        }
+
+        string fileName = entry.name.split("\\")[$ - 1].replace("\"", "");
+
+        if (type == "lang" && fileName.endsWith(".lang"))
+        {
+            langs ~= fileName.replace(".lang", "");
+        }
+        else if (type == "json" && fileName.endsWith(".json"))
+        {
+            langs ~= fileName.replace(".json", "");
+        }
+    }
+
+    return langs;
 }
